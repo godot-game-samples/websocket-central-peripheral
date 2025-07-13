@@ -7,6 +7,8 @@
 - Raspberry Pi: Central
 - ESP32: Peripheral
 
+I am trying to make multiple connections and the response is slow. For immediacy, [click here.](https://github.com/godot-game-samples/websocket-central-peripheral/tree/feature/single_connection)
+
 ```
 python3 client/pi/main.py
 ```
