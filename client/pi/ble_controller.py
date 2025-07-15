@@ -7,40 +7,37 @@ CHARACTERISTIC_UUID = "abcdef01-1234-5678-1234-56789abcdef0"
 
 class BLEController:
     def __init__(self):
-        self.target_name = None
-        self.target_address = None
-        self.connected_client = None
+        self.clients = {}
 
-    async def scan_and_send(self, data: str):
-        if self.connected_client and self.connected_client.is_connected:
-            await self._send_data(data)
-            return
-
-        print(f"[BLE] Scanning for device to send: {data}")
-        devices = await BleakScanner.discover(timeout=3.0)
+    async def initialize_connections(self):
+        print("[BLE] Scanning for devices to connect...")
+        devices = await BleakScanner.discover(timeout=5.0)
 
         for d in devices:
             if d.name and d.name.startswith(TARGET_NAME_PREFIX):
-                print(f"[BLE] Found target: {d.name} ({d.address})")
-                self.target_name = d.name
-                self.target_address = d.address
-                self.connected_client = BleakClient(d.address)
+                if d.name in self.clients:
+                    continue
+
+                print(f"[BLE] Connecting to {d.name} ({d.address})")
+                client = BleakClient(d.address)
                 try:
-                    await self.connected_client.connect()
-                    print(f"[BLE] Connected to {d.address}")
-                    await self._send_data(data)
+                    await client.connect()
+                    if client.is_connected:
+                        self.clients[d.name] = client
+                        print(f"[BLE] Connected to {d.name}")
+                    else:
+                        print(f"[BLE] Failed to connect to {d.name}")
                 except Exception as e:
-                    print(f"[BLE] Connection failed: {e}")
-                    self.connected_client = None
-                return
+                    print(f"[BLE] Connection error with {d.name}: {e}")
 
-        print("[BLE] Target device not found")
-
-    async def _send_data(self, data: str):
-        try:
-            await self.connected_client.write_gatt_char(CHARACTERISTIC_UUID, data.encode())
-            print(f"[BLE] Sent: {data}")
-        except Exception as e:
-            print(f"[BLE] Write error: {e}")
-            await self.connected_client.disconnect()
-            self.connected_client = None
+    async def send_to_all(self, data: str):
+        print(f"[BLE] Sending to all: {data}")
+        for name, client in self.clients.items():
+            if client.is_connected:
+                try:
+                    await client.write_gatt_char(CHARACTERISTIC_UUID, data.encode())
+                    print(f"[BLE] Sent to {name}")
+                except Exception as e:
+                    print(f"[BLE] Write failed to {name}: {e}")
+            else:
+                print(f"[BLE] Skipped {name} (not connected)")

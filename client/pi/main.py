@@ -2,14 +2,16 @@ import asyncio
 from ws_client import BLEWebSocketClient
 from ble_controller import BLEController
 
-ble_ctrl = BLEController()
+ble = BLEController()
 
 
 async def main():
-    async def handle_ws_message(message: str):
-        await ble_ctrl.scan_and_send(message)
+    await ble.initialize_connections()
 
-    ws = BLEWebSocketClient("ws://192.168.3.xx:9080", handle_ws_message)
+    async def on_message(msg):
+        asyncio.create_task(ble.send_to_all(msg))
+
+    ws = BLEWebSocketClient("ws://192.168.3.xx:9080", on_message)
 
     try:
         await ws.run()
