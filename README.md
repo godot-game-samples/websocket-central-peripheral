@@ -7,7 +7,13 @@
 - Raspberry Pi: Central
 - ESP32: Peripheral
 
+### Cached Single connections
+
 I am trying to make multiple connections and the response is slow. For immediacy, [click here.](https://github.com/godot-game-samples/websocket-central-peripheral/tree/feature/single_connection)
+
+### Cached Multiple connections
+
+Here is a form that supports multiple connections, cached and reacts immediately, [click here.](https://github.com/godot-game-samples/websocket-central-peripheral/tree/feature/multi_connection)
 
 ```
 python3 client/pi/main.py
